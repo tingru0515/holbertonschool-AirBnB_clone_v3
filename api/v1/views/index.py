@@ -1,27 +1,26 @@
 #!/usr/bin/python3
-"""The index file"""
+"""
+This module handles all routes with the blueprint app_views
+"""
 from flask import jsonify
-from models import storage
+
 from api.v1.views import app_views
+from models import storage
+from models.engine.db_storage import classes
 
 
-@app_views.route('/status', strict_slashes=False)
+@app_views.route('/status', methods=['GET'], strict_slashes=False)
 def status():
-    """returns a JSON response with status OK"""
+    """Return status OK."""
     return jsonify({"status": "OK"})
 
 
-@app_views.route('/stats', strict_slashes=False)
+@app_views.route('/stats', methods=['GET'], strict_slashes=False)
 def stats():
-    """returns the number of each object"""
-    types = {'amenities': 'Amenity',
-             'cities': 'City',
-             'places': 'Place',
-             'reviews': 'Review',
-             'states': 'State',
-             'users': 'User'
-             }
-    stats = {}
-    for key, type in types.items():
-        stats[key] = storage.count(type)
-    return jsonify(stats)
+    """Retrieves the number of each objects by type"""
+    obj = {}
+    for cls in classes.values():
+        cls_count = storage.count(cls)
+        cls_name = cls.__tablename__
+        obj[cls_name] = cls_count
+    return jsonify(obj)

@@ -16,7 +16,7 @@ from models.state import State
 from models.user import User
 import json
 import os
-import pycodestyle as pep8
+import pep8
 import unittest
 DBStorage = db_storage.DBStorage
 classes = {"Amenity": Amenity, "City": City, "Place": Place,
@@ -70,11 +70,6 @@ test_db_storage.py'])
 
 class TestFileStorage(unittest.TestCase):
     """Test the FileStorage class"""
-
-    attributes = {
-        "name": "Mina"
-    }
-
     @unittest.skipIf(models.storage_t != 'db', "not testing db storage")
     def test_all_returns_dict(self):
         """Test that all returns a dictionaty"""
@@ -92,22 +87,25 @@ class TestFileStorage(unittest.TestCase):
     def test_save(self):
         """Test that save properly saves objects to file.json"""
 
-    @unittest.skipIf(models.storage_t != 'db', "not testing db storage")
-    def test_get(self):
-        """Tests the new get function retrieves one object"""
-        state = State(**self.attributes)
-        storage = DBStorage()
-        state.save()
-        storage.reload()
-        output = storage.get(State, state.id)
-        self.assertTrue(output is not None)
+    def test_get_method(self):
+        """Test get method with class argument"""
+        state_obj = State(name='test')
+        state_id = state_obj.id
+        models.storage.new(state_obj)
+        models.storage.save()
+        retrieved_state = models.storage.get(State, state_id)
 
-    @unittest.skipIf(models.storage_t != 'db', "not testing db storage")
-    def test_count(self):
-        """Tests the new count function counts the number of objects"""
-        state = State(**self.attributes)
-        storage = DBStorage()
-        state.save()
-        storage.reload()
-        count = storage.count(State)
-        self.assertTrue(count > 1)
+        self.assertEqual(state_id, retrieved_state.id)
+        fake_id = '12243'
+        retrieved_state = models.storage.get(State, fake_id)
+        self.assertEqual(retrieved_state, None)
+
+    def test_count_method(self):
+        """Test get method with class argument"""
+        all_states = models.storage.all(State)
+        state_count = models.storage.count(State)
+        self.assertEqual(len(all_states), state_count)
+
+        all_obj = models.storage.all()
+        all_count = models.storage.count()
+        self.assertEqual(len(all_obj), all_count)

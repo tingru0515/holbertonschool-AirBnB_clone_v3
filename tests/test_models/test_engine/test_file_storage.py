@@ -16,7 +16,7 @@ from models.state import State
 from models.user import User
 import json
 import os
-import pycodestyle as pep8
+import pep8
 import unittest
 FileStorage = file_storage.FileStorage
 classes = {"Amenity": Amenity, "BaseModel": BaseModel, "City": City,
@@ -34,7 +34,7 @@ class TestFileStorageDocs(unittest.TestCase):
         """Test that models/engine/file_storage.py conforms to PEP8."""
         pep8s = pep8.StyleGuide(quiet=True)
         result = pep8s.check_files(['models/engine/file_storage.py'])
-        self.assertEqual(result.total_errors, 1,
+        self.assertEqual(result.total_errors, 0,
                          "Found code style errors (and warnings).")
 
     def test_pep8_conformance_test_file_storage(self):
@@ -68,6 +68,7 @@ test_file_storage.py'])
                             "{:s} method needs a docstring".format(func[0]))
 
 
+@unittest.skipIf(models.storage_t == 'db', "not testing file storage")
 class TestFileStorage(unittest.TestCase):
     """Test the FileStorage class"""
     @unittest.skipIf(models.storage_t == 'db', "not testing file storage")
@@ -114,20 +115,27 @@ class TestFileStorage(unittest.TestCase):
             js = f.read()
         self.assertEqual(json.loads(string), json.loads(js))
 
-    @unittest.skipIf(models.storage_t == 'db', "not testing file storage")
-    def test_get(self):
-        """Test the new get function retrieves one object"""
+    def test_get_method(self):
+        """Test get method with class argument"""
         storage = FileStorage()
-        state = State()
-        state.save()
-        output = storage.get(State, state.id)
-        self.assertTrue(output is not None)
+        state_obj = State(name='test')
+        state_id = state_obj.id
+        storage.new(state_obj)
+        storage.save()
+        retrieved_state = storage.get(State, state_id)
 
-    @unittest.skipIf(models.storage_t == 'db', "not testing file storage")
-    def test_count(self):
-        """Test the new count function counts the objects"""
+        self.assertEqual(state_id, retrieved_state.id)
+        fake_id = '12243'
+        retrieved_state = storage.get(State, fake_id)
+        self.assertEqual(retrieved_state, None)
+
+    def test_count_method(self):
+        """Test get method with class argument"""
         storage = FileStorage()
-        state = State()
-        state.save()
-        count = storage.count(State)
-        self.assertTrue(count > 1)
+        all_states = storage.all(State)
+        state_count = storage.count(State)
+        self.assertEqual(len(all_states), state_count)
+
+        all_obj = storage.all()
+        all_count = storage.count()
+        self.assertEqual(len(all_obj), all_count)
